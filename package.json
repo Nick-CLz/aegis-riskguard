@@ -1,0 +1,35 @@
+{
+  "name": "aegis-riskguard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aegis-RiskGuard — 2LoD operational risk agent with deep-prompt-inspection firewall. Hackathon submission for Milan AI Week 2026.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "redteam": "node scripts/redteam.mjs"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "js-yaml": "^4.1.0",
+    "next": "14.2.5",
+    "pdf-parse": "^1.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "uuid": "^10.0.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.6",
+    "typescript": "^5.5.3"
+  }
+}

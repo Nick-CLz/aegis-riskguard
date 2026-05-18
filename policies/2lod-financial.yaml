@@ -1,0 +1,288 @@
+# =============================================================================
+# Aegis-RiskGuard — 2LoD Financial Services Policy Pack for Lobster Trap
+# =============================================================================
+# Purpose: Conversation-layer security for AI agents inside a 2nd Line of
+#          Defence operational risk function at a regulated bank.
+#
+# Regulatory alignment (informational — this YAML does not claim compliance):
+#   • EU DORA (Digital Operational Resilience Act) — Article 5–14: ICT risk
+#     management, incident classification, third-party risk
+#   • EU AI Act — Annex III §5(b): credit-scoring / Annex III §1(c): essential
+#     private services. Operational risk agents in regulated banks are
+#     high-risk systems requiring human oversight (Art. 14)
+#   • Basel III — Operational Risk standardised approach
+#   • DFSA (Dubai) — Conduct of Business Module §3.4: AI/automation governance
+#   • Bank of Thailand — IT Risk Management Policy (relevant locally)
+#
+# Order matters: rules use first-match-wins. Hard denies at top, observation
+# at bottom.
+#
+# Compatible with upstream Veea Lobster Trap (MIT):
+#   https://github.com/veea/lobstertrap
+#
+# License: MIT · Synthetic policy pack · Hackathon submission
+# =============================================================================
+
+metadata:
+  name: "Aegis-RiskGuard 2LoD Financial Policy Pack"
+  version: "0.1.0"
+  industry: "banking"
+  jurisdictions: ["EU", "UAE", "TH", "SG", "UK"]
+  framework_alignment:
+    - "EU DORA Art. 5-14"
+    - "EU AI Act Annex III (high-risk systems)"
+    - "Basel III — Operational Risk"
+    - "DFSA Conduct of Business §3.4"
+    - "SOC 2 Type II — relevant control mapping"
+  description: >
+    Policy enforcement rules for AI agents handling policy documents, RCSAs,
+    and remediation memos in a regulated banking environment.
+
+defaults:
+  on_no_match: human_review
+  log_all: true
+  redact_in_logs:
+    - credit_card
+    - iban
+    - thai_id
+    - us_ssn
+    - api_key
+
+# -----------------------------------------------------------------------------
+# Reusable detector definitions
+# -----------------------------------------------------------------------------
+detectors:
+  api_key_generic:
+    type: regex
+    patterns:
+      - 'sk-[A-Za-z0-9]{32,}'
+      - 'AIza[0-9A-Za-z\-_]{35}'
+      - 'AKIA[0-9A-Z]{16}'
+      - 'ghp_[A-Za-z0-9]{36}'
+      - 'xoxb-[0-9]{11,}-[0-9]{11,}-[A-Za-z0-9]{24,}'
+
+  private_key_block:
+    type: regex
+    patterns:
+      - '-----BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY-----'
+
+  thai_id:
+    type: regex
+    patterns:
+      - '\b[0-9]{1}-[0-9]{4}-[0-9]{5}-[0-9]{2}-[0-9]{1}\b'
+      - '\b[0-9]{13}\b'
+
+  us_ssn:
+    type: regex
+    patterns:
+      - '\b(?!000|666|9\d\d)\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b'
+
+  credit_card:
+    type: luhn
+    formats: [visa, mastercard, amex, jcb]
+
+  iban:
+    type: regex
+    patterns:
+      - '\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}\b'
+
+  injection_classic:
+    type: regex
+    case_insensitive: true
+    patterns:
+      - 'ignore (all |the |your )?(previous|prior|above) (instructions?|prompts?|rules?)'
+      - 'disregard (all |the |your )?(previous|prior|above)'
+      - 'you are now (in )?developer mode'
+      - 'system\s*:\s*you are'
+      - 'pretend (you are|to be) (an? )?(unrestricted|jailbroken|uncensored)'
+      - '\[\[SYSTEM\]\]'
+      - '###\s*new\s*instructions?\s*###'
+
+  injection_exfiltration:
+    type: regex
+    case_insensitive: true
+    patterns:
+      - 'send (the|your|all) (system prompt|instructions) to'
+      - 'print (the|your|all) (training data|hidden|system)'
+      - 'concatenate (all|the|every) (previous|prior) (document|policy|file)'
+      - 'forward .* to (http|https|mailto|tel|sms)'
+      - 'exfiltrate'
+      - 'leak (the|your) (system|hidden|context)'
+
+  state_changing_action:
+    type: keyword_list
+    case_insensitive: true
+    keywords:
+      - "send email to"
+      - "publish memo"
+      - "auto-approve"
+      - "skip review"
+      - "bypass compliance"
+      - "delete record"
+      - "modify policy"
+      - "wire transfer"
+      - "execute trade"
+
+# -----------------------------------------------------------------------------
+# RULES — evaluated top to bottom, first match wins.
+# -----------------------------------------------------------------------------
+rules:
+
+  # === TIER 1 — Hard denies (never permitted, regardless of agent or intent) ==
+
+  - id: deny_private_keys
+    description: "Block any prompt or response containing a private key block."
+    regulatory_basis: "DORA Art. 9 — ICT security"
+    when:
+      detectors_any: [private_key_block]
+    action: DENY
+    response_to_caller: { error: "policy_violation", reason: "private_key_detected" }
+    log_level: critical
+
+  - id: deny_api_keys_in_outbound
+    description: "Strip and deny if an agent tries to send a live API key to the model."
+    regulatory_basis: "DORA Art. 9 — ICT security"
+    when:
+      direction: outbound
+      detectors_any: [api_key_generic]
+    action: DENY
+    response_to_caller: { error: "policy_violation", reason: "credential_in_prompt" }
+    log_level: critical
+
+  - id: deny_classic_injection
+    description: "Block classic prompt-injection phrases embedded in document content."
+    regulatory_basis: "EU AI Act Art. 15 — accuracy, robustness, cybersecurity"
+    when:
+      direction: outbound
+      detectors_any: [injection_classic]
+      source_is_uploaded_document: true
+    action: DENY
+    response_to_caller: { error: "policy_violation", reason: "injection_pattern_in_user_content" }
+    log_level: high
+
+  - id: deny_exfiltration_pattern
+    description: "Block attempts to exfiltrate system prompt or cross-document data."
+    regulatory_basis: "EU AI Act Art. 15; DORA Art. 9"
+    when:
+      detectors_any: [injection_exfiltration]
+    action: DENY
+    log_level: critical
+
+  # === TIER 2 — Human review (the EU AI Act Article 14 keystone) =============
+
+  - id: review_intent_mismatch
+    description: >
+      Declared agent intent does not match Lobster Trap's detected intent.
+      This is the keystone "declared vs detected" check that catches subverted agents.
+    regulatory_basis: "EU AI Act Art. 14 — human oversight"
+    when:
+      declared_intent_present: true
+      detected_intent_mismatches_declared: true
+    action: HUMAN_REVIEW
+    review_queue: 2lod_security
+    log_level: high
+
+  - id: review_state_changing_action
+    description: "Agent appears to be requesting a state-changing action."
+    regulatory_basis: "EU AI Act Art. 14; DORA Art. 6 — governance"
+    when:
+      detectors_any: [state_changing_action]
+    action: HUMAN_REVIEW
+    review_queue: 2lod_security
+    log_level: high
+
+  # === TIER 3 — PII handling =================================================
+
+  - id: deny_unredacted_pii_outbound
+    description: "Block outbound prompts with unredacted PII except where the agent legitimately handles it."
+    regulatory_basis: "GDPR Art. 5, 32; UAE Federal Decree-Law No. 45 of 2021; PDPA (Thailand)"
+    when:
+      direction: outbound
+      detectors_any: [thai_id, us_ssn, credit_card, iban]
+      agent_id_not_in: [rcsa_analyzer]
+    action: DENY
+    response_to_caller: { error: "policy_violation", reason: "unredacted_pii" }
+    log_level: high
+
+  - id: redact_pii_for_rcsa_analyzer
+    description: "RCSA Analyzer may see names but PII numbers must be redacted."
+    when:
+      direction: outbound
+      agent_id: rcsa_analyzer
+      detectors_any: [thai_id, us_ssn, credit_card, iban]
+    action: REDACT_AND_LOG
+    redaction_token: "[REDACTED:PII]"
+    log_level: medium
+
+  # === TIER 4 — Rate limiting ================================================
+
+  - id: rate_limit_per_session
+    description: "Cap any single session's Gemini calls to prevent runaway loops."
+    when:
+      direction: outbound
+    action: RATE_LIMIT
+    limit: { window_seconds: 60, max_calls: 30, per: session_id }
+    on_exceed: DENY
+    log_level: medium
+
+  # === TIER 5 — Observation only =============================================
+
+  - id: log_long_context_calls
+    description: "Track when agents send >100k tokens — cost + latency signal."
+    when:
+      direction: outbound
+      prompt_token_count_gte: 100000
+    action: LOG
+    log_level: info
+
+  - id: log_response_refusal
+    description: "Gemini refused to answer — useful for prompt-engineering review."
+    when:
+      direction: inbound
+      response_contains_any: ["I can't help with that", "I'm not able to", "I cannot provide"]
+    action: LOG
+    log_level: info
+
+  # === TIER 6 — Catchall =====================================================
+
+  - id: default_allow_with_audit
+    description: "Anything not matched above gets allowed but always audited."
+    when: { always: true }
+    action: ALLOW
+    log_level: info
+
+# -----------------------------------------------------------------------------
+# Audit log
+# -----------------------------------------------------------------------------
+audit:
+  storage: postgres
+  table: aegis_audit
+  retention_days: 365
+  signature: { algorithm: hmac-sha256, key_env: LOBSTERTRAP_AUDIT_HMAC_KEY }
+  fields_persisted:
+    - timestamp
+    - session_id
+    - agent_id
+    - declared_intent
+    - detected_intent
+    - rule_id_matched
+    - action_taken
+    - prompt_hash
+    - response_hash
+    - token_count_in
+    - token_count_out
+    - latency_ms
+    - reviewer_decision
+    - reviewer_id
+    - reviewer_timestamp
+
+review_queues:
+  2lod_security:
+    description: "Security-related escalations — injection, exfiltration, credentials."
+    sla_hours: 4
+  2lod_governance:
+    description: "Policy-interpretation escalations — cross-document, scope creep."
+    sla_hours: 24
+  2lod_engineering:
+    description: "Technical escalations — stuck loops, rate-limit breaches."
+    sla_hours: 8

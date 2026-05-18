@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+body { font-family: ui-sans-serif, system-ui, sans-serif; }
+
+.card {
+  @apply rounded-lg border border-aegis-navy bg-aegis-navy/40 p-5;
+}
+
+.btn {
+  @apply rounded-md bg-aegis-teal px-4 py-2 text-sm font-medium text-white transition hover:bg-aegis-deep disabled:opacity-50;
+}
+
+.btn-ghost {
+  @apply rounded-md border border-aegis-teal/50 px-4 py-2 text-sm font-medium text-aegis-sand transition hover:bg-aegis-navy;
+}
+
+.tag-critical { @apply bg-aegis-alert/20 text-aegis-alert border border-aegis-alert/40; }
+.tag-high { @apply bg-aegis-warn/20 text-aegis-warn border border-aegis-warn/40; }
+.tag-medium { @apply bg-aegis-teal/20 text-aegis-teal border border-aegis-teal/40; }
+.tag-low { @apply bg-aegis-ok/20 text-aegis-ok border border-aegis-ok/40; }
+
+.pill {
+  @apply inline-block rounded px-2 py-0.5 text-xs font-mono uppercase tracking-wide;
+}
