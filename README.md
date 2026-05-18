@@ -1,5 +1,7 @@
 # 🦞 Aegis-RiskGuard
 
+![Aegis-RiskGuard cover](./docs/cover-1200x630.png)
+
 > **The trust layer for autonomous risk operations in regulated finance.**
 >
 > An AI agent that compares policy documents against RCSA registers and identifies control gaps in seconds — with **every AI call inspected by a deep-prompt-inspection firewall** and **every decision auditable by a regulator**.
@@ -14,6 +16,7 @@
 **Tracks:** Enterprise Utility · Intelligent Reasoning · Gemini · Vultr
 **License:** MIT
 **Repo:** [github.com/Nick-CLz/aegis-riskguard](https://github.com/Nick-CLz/aegis-riskguard) · **Demo:** deploy to Vultr via bootstrap.sh · [Demo video (3 min)](#demo-video)
+**Deck:** [docs/Aegis-RiskGuard-deck.pdf](./docs/Aegis-RiskGuard-deck.pdf) (8 slides) · **Editable source:** [docs/Aegis-RiskGuard-deck.pptx](./docs/Aegis-RiskGuard-deck.pptx)
 
 ---
 
@@ -140,7 +143,10 @@ Full runbook: [`deploy/vultr/README.md`](./deploy/vultr/README.md).
 
 ## The 4 adversarial tests
 
-Run via the **Red Team** tab in the UI, or `npm run redteam` from the CLI.
+Run via the **Red Team** tab in the UI, or one of two CLI runners:
+
+- `npm run redteam` — hits the running server's `/api/redteam` endpoint (requires `npm run dev` in another terminal)
+- `npm run redteam:offline` — loads the Lobster Trap engine directly in-process; no server needed, no Gemini key needed
 
 | ID | Attack | Lobster Trap response | Rule |
 |---|---|---|---|

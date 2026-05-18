@@ -408,14 +408,13 @@ export default function Home() {
   const [expandedAudit, setExpandedAudit] = useState<number | null>(null);
   const [redTeam, setRedTeam] = useState<RedTeamResult[]>([]);
   const [hasRun, setHasRun] = useState(false);
-  const [memo, setMemo] = useState('');
-  const [memoFallback, setMemoFallback] = useState(false);
-  const [memoTrail, setMemoTrail] = useState<string[]>([]);
-  
-  // Memo drafter state
+
+  // Memo drafter state (single source of truth — used by both the inline
+  // analyze-tab card AND the dedicated 'memo' tab)
   const [memo, setMemo] = useState<string>('');
   const [drafting, setDrafting] = useState(false);
-  const [memoDecisionTrail, setMemoDecisionTrail] = useState<string[]>([]);
+  const [memoFallback, setMemoFallback] = useState(false);
+  const [memoTrail, setMemoTrail] = useState<string[]>([]);
 
   const refreshAudit = useCallback(async () => {
     try {
@@ -444,7 +443,8 @@ export default function Home() {
     setFallback(false);
     setHasRun(false);
     setMemo('');
-    setMemoDecisionTrail([]);
+    setMemoFallback(false);
+    setMemoTrail([]);
     try {
       const r = await fetch('/api/analyze', { method: 'POST' }).then(x => x.json());
       setGaps(r.gaps ?? []);
@@ -461,36 +461,25 @@ export default function Home() {
   }
 
   async function runDraftMemo() {
-    if (gaps.length === 0) return;
     setDrafting(true);
     setMemo('');
-    setMemoDecisionTrail([]);
+    setMemoFallback(false);
+    setMemoTrail([]);
     try {
+      // If gap analysis already ran we hand the gaps to the drafter; otherwise the
+      // server falls back to the synthetic demo gaps so the button always produces
+      // something on stage.
+      const body = gaps.length > 0 ? { gaps } : {};
       const r = await fetch('/api/draft-memo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gaps })
+        body: JSON.stringify(body)
       }).then(x => x.json());
-      setMemo(r.memo ?? '');
-      setMemoDecisionTrail(r.decisionTrail ?? []);
-    } finally {
-      setDrafting(false);
-      refreshAudit();
-    }
-  }
-
-  async function runDraftMemo() {
-    setRunning(true);
-    setMemo('');
-    setMemoTrail([]);
-    try {
-      const body = gaps.length > 0 ? { gaps } : {};
-      const r = await fetch('/api/draft-memo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(x => x.json());
       setMemo(r.memo ?? '');
       setMemoFallback(!!r.fallback);
       setMemoTrail(r.decisionTrail ?? []);
     } finally {
-      setRunning(false);
+      setDrafting(false);
       refreshAudit();
     }
   }
@@ -641,13 +630,13 @@ export default function Home() {
                     </div>
                   )}
 
-                  {memoDecisionTrail.length > 0 && (
+                  {memoTrail.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-aegis-navy/60">
                       <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-aegis-sand/60">
                         Memo Drafter Decision Trail
                       </h4>
                       <ol className="space-y-1 text-xs font-mono">
-                        {memoDecisionTrail.map((d, i) => (
+                        {memoTrail.map((d, i) => (
                           <li key={i} className="text-aegis-sand/70 flex gap-2">
                             <span className="text-aegis-sand/30 shrink-0">{i + 1}.</span>
                             <span>{d}</span>
@@ -688,8 +677,8 @@ export default function Home() {
                       AI drafts a formal 2LoD memo from detected gaps · every call inspected by Lobster Trap
                     </p>
                   </div>
-                  <button className="btn shrink-0" onClick={runDraftMemo} disabled={running}>
-                    {running
+                  <button className="btn shrink-0" onClick={runDraftMemo} disabled={drafting}>
+                    {drafting
                       ? <span className="flex items-center gap-2"><Spinner />Drafting…</span>
                       : gaps.length > 0 ? `Draft Memo (${gaps.length} gaps)` : 'Draft Demo Memo'}
                   </button>

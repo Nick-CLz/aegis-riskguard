@@ -20,9 +20,9 @@
 
 ### 📸 Cover Image and Presentation
 
-- [ ] **Cover Image:** A 1200x630 PNG with the 🦞 logo + tagline "The trust layer for autonomous risk operations in regulated finance." Quick way: open the title slide of the deck in Slides, "Download as PNG", crop to 1200x630.
-- [ ] **Video Presentation:** YouTube unlisted URL of the 3-min demo video (see `docs/demo-video-script.md`)
-- [ ] **Slide Presentation:** PDF export of the 8-slide deck (see `docs/pitch-deck-outline.md`). Upload to the repo as `docs/Aegis-RiskGuard-deck.pdf` OR share a Google Slides view-only link.
+- [x] **Cover Image:** [`docs/cover-1200x630.png`](./cover-1200x630.png) — 1200x630, lobster mark + tagline, ready to upload to lablab.
+- [ ] **Video Presentation:** YouTube unlisted URL of the 3-min demo video (record per [`docs/demo-video-script.md`](./demo-video-script.md); needs a real recording, not generated here).
+- [x] **Slide Presentation:** [`docs/Aegis-RiskGuard-deck.pdf`](./Aegis-RiskGuard-deck.pdf) + editable [`docs/Aegis-RiskGuard-deck.pptx`](./Aegis-RiskGuard-deck.pptx) (8 slides, built from `pitch-deck-outline.md`).
 
 ### 💻 App Hosting & Code Repository
 
@@ -52,7 +52,7 @@ Run through this before clicking Submit:
 - [ ] `http://[your-vultr-ip]/api/health` returns `{"ok": true}`
 - [ ] `http://[your-vultr-ip]/` loads the UI
 - [ ] Clicking **Run Analysis** produces gaps (live or fallback — either is fine)
-- [ ] Clicking **Run Red Team** produces 4 results, ideally all `✓ PASS`
+- [ ] Clicking **Run Red Team** produces 4 results, ideally all `✓ PASS` (verified offline via `npm run redteam:offline` — 4/4 pass)
 - [ ] YouTube video URL works in an incognito window
 - [ ] PDF of the deck opens and renders
 - [ ] Synthetic-data disclaimer is visible in README
