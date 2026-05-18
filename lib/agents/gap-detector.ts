@@ -122,13 +122,15 @@ Identify all gaps. Respond with strict JSON as specified in your instructions.`;
     };
   }
 
-  // Parse model output. Be defensive — strip code fences if the model added them despite instructions.
+  // Parse model output. Be defensive — strip thinking tags (Gemini 2.5 Pro thinking mode),
+  // code fences, and any other non-JSON wrapper the model may add.
   let parsed: { gaps: Gap[]; coverageScore: number };
   try {
     const cleaned = result.output
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/\s*```\s*$/i, '')
+      .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '') // strip Gemini thinking blocks
+      .replace(/^```json\s*/im, '')
+      .replace(/^```\s*/im, '')
+      .replace(/\s*```\s*$/im, '')
       .trim();
     parsed = JSON.parse(cleaned);
   } catch (err: any) {

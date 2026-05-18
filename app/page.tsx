@@ -285,7 +285,11 @@ export default function Home() {
       </div>
 
       <footer className="mt-10 text-xs text-aegis-sand/40 border-t border-aegis-navy pt-4">
-        MIT licensed · Synthetic data only · Built for Milan AI Week 2026 · Inspired by{' '}
+        MIT licensed · Synthetic data only · Built for Milan AI Week 2026 ·{' '}
+        <a href="https://github.com/Nick-CLz/aegis-riskguard" className="underline">
+          GitHub
+        </a>
+        {' '}· Inspired by{' '}
         <a href="https://github.com/veea/lobstertrap" className="underline">
           Veea Lobster Trap
         </a>

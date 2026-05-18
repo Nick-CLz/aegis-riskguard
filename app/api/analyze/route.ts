@@ -25,13 +25,14 @@ export async function POST(req: NextRequest) {
         sessionId,
         fallback: true,
         fallbackReason: result.blockedReason,
+        usedDemoData: true,
         gaps: DEMO_GAPS_FALLBACK.gaps,
         coverageScore: DEMO_GAPS_FALLBACK.coverageScore,
         decisionTrail: result.decisionTrail
       });
     }
 
-    return NextResponse.json({ sessionId, ...result, ok: result.ok });
+    return NextResponse.json({ sessionId, ...result, ok: result.ok, usedDemoData: !body.policy });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message ?? String(err) }, { status: 500 });
   }

@@ -86,7 +86,7 @@ export async function POST() {
     );
     const pass =
       decision.action === t.expectedAction &&
-      (decision.ruleIdMatched === t.expectedRule || decision.action === t.expectedAction);
+      decision.ruleIdMatched === t.expectedRule;
     return { test: t, decision, pass };
   });
   return NextResponse.json({ sessionId, results });
