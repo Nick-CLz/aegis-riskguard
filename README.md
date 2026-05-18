@@ -35,7 +35,7 @@ Inside a regulated bank, the 2nd Line of Defence (2LoD) Operational Risk team is
 3. Detecting **gaps** between what policy *requires* and what departmental controls *actually do*
 4. Drafting **remediation memos** and tracking issues to closure
 
-Today, this is done with Excel, Word, email, and a lot of senior-analyst time. Reviewing a single departmental RCSA against five policies takes hours. Consolidating 16 RCSAs across a bank, weeks. The work is repetitive, time-pressured, and high-stakes — exactly the wrong combination for human-only execution.
+Today, this is done with Excel, Word, email, and a lot of senior-analyst time. Reviewing a single departmental RCSA against five policies takes hours. Consolidating Many RCSAs across a bank, weeks. The work is repetitive, time-pressured, and high-stakes — exactly the wrong combination for human-only execution.
 
 **Aegis-RiskGuard automates the analytical grunt work while keeping a human firmly in the loop for every decision that matters.**
 
