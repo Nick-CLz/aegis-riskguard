@@ -36,7 +36,7 @@ Easiest path — clone from GitHub once you've pushed:
 
 ```bash
 cd /opt
-git clone https://github.com/YOUR-USERNAME/aegis-riskguard.git
+git clone https://github.com/Nick-CLz/aegis-riskguard.git
 cd aegis-riskguard
 ```
 

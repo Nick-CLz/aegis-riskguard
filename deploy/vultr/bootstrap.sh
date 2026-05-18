@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/YOUR-USER/aegis-riskguard.git}"
+REPO_URL="${REPO_URL:-https://github.com/Nick-CLz/aegis-riskguard.git}"
 INSTALL_DIR="/opt/aegis-riskguard"
 
 echo "==> Installing Docker"

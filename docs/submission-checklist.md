@@ -26,7 +26,7 @@
 
 ### 💻 App Hosting & Code Repository
 
-- [ ] **Public GitHub Repository:** `https://github.com/[you]/aegis-riskguard`
+- [x] **Public GitHub Repository:** `https://github.com/Nick-CLz/aegis-riskguard`
 - [ ] **Demo Application Platform:** Vultr
 - [ ] **Application URL:** `http://[your-vultr-ip]/` (or `https://your-domain.com` if you set one up)
 

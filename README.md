@@ -7,7 +7,7 @@
 **Submission:** Milan AI Week 2026 · AI Agent Olympics Hackathon
 **Tracks:** Enterprise Utility · Intelligent Reasoning · Gemini · Vultr
 **License:** MIT
-**Demo:** [http://YOUR-VULTR-IP/](http://YOUR-VULTR-IP/) · [Demo video (3 min)](#demo-video)
+**Repo:** [github.com/Nick-CLz/aegis-riskguard](https://github.com/Nick-CLz/aegis-riskguard) · **Demo:** deploy to Vultr via bootstrap.sh · [Demo video (3 min)](#demo-video)
 
 ---
 
@@ -123,7 +123,7 @@ Click **Red Team** → see 4 adversarial test prompts blocked or routed for huma
 
 ```bash
 # On a fresh Ubuntu 22.04 Vultr VM:
-curl -fsSL https://raw.githubusercontent.com/YOUR-USER/aegis-riskguard/main/deploy/vultr/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Nick-CLz/aegis-riskguard/main/deploy/vultr/bootstrap.sh | bash
 # Follow the prompt to set GEMINI_API_KEY in .env, then re-run
 ```
 
