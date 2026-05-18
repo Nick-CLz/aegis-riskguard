@@ -70,7 +70,11 @@ JSON shape:
   "coverageScore": 0.0
 }
 
-The coverageScore is a float 0.0–1.0 representing the fraction of policy requirements covered by at least one effective RCSA control.
+coverageScore rules:
+- Count how many policy requirements have at least one RCSA control that attempts to address them (even if partial, stale, or under-resourced — the gap captures quality, not presence).
+- Divide by total number of requirements to get a 0.0–1.0 float.
+- A requirement with state=missing scores 0 (no control exists). All other states score 1 (a control exists, even with gaps).
+- Example: 5 requirements, 2 have no matching control (missing) → coverageScore = 0.6
 
 DO NOT invent policy requirements not in the input.
 DO NOT recommend specific people by name — refer only to roles.
@@ -103,6 +107,9 @@ Identify all gaps. Respond with strict JSON as specified in your instructions.`;
     systemInstruction: SYSTEM_INSTRUCTION
   });
 
+  if (result.provider && result.modelUsed) {
+    decisionTrail.push(`Provider: ${result.provider} · model: ${result.modelUsed}`);
+  }
   decisionTrail.push(
     `Outbound decision: ${result.outboundDecision.action} (rule: ${result.outboundDecision.ruleIdMatched})`
   );

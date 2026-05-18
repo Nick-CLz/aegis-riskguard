@@ -1,0 +1,13 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "env": {
+    "GEMINI_MODEL_REASONING": "gemini-2.5-flash",
+    "GEMINI_MODEL_FAST": "gemini-2.5-flash",
+    "CLAUDE_MODEL_REASONING": "claude-opus-4-7",
+    "CLAUDE_MODEL_FAST": "claude-sonnet-4-6",
+    "DEMO_OFFLINE_MODE": "false"
+  }
+}

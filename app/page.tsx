@@ -259,6 +259,45 @@ function DataPreviewPanel() {
   );
 }
 
+function AboutPanel() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="card">
+      <button className="w-full flex items-center justify-between text-left" onClick={() => setOpen(o => !o)}>
+        <div>
+          <h3 className="text-sm font-semibold">What is 2LoD? (Context for non-finance readers)</h3>
+          <p className="text-xs text-aegis-sand/50 mt-0.5">Why this problem is worth $23B–$56B to solve</p>
+        </div>
+        <span className="text-aegis-sand/40 text-xs shrink-0 ml-3">{open ? '▲ hide' : '▼ read'}</span>
+      </button>
+      {open && (
+        <div className="mt-4 space-y-3 text-sm text-aegis-sand/70 leading-relaxed">
+          <p>
+            <strong className="text-aegis-sand/90">2nd Line of Defence (2LoD)</strong> is the operational risk team inside a regulated bank.
+            They sit between the business (1LoD, who take risks) and internal audit (3LoD, who check everyone else).
+            Their job: make sure the bank's risk policies are actually being followed in practice.
+          </p>
+          <p>
+            <strong className="text-aegis-sand/90">An RCSA</strong> (Risk &amp; Control Self-Assessment) is a spreadsheet every business unit
+            submits annually declaring: "here are the risks we face, here are the controls we have."
+            A large bank has 10–20 business units, each with 50–200 controls.
+          </p>
+          <p>
+            The 2LoD team must compare every control in every RCSA against five+ corporate policies —
+            finding where controls are <em>missing, misaligned, stale, or under-resourced.</em>
+            Done manually today: <strong className="text-aegis-warn">hours per RCSA, weeks for the full bank.</strong>
+          </p>
+          <div className="rounded bg-aegis-teal/5 border border-aegis-teal/20 p-3 text-xs">
+            <strong className="text-aegis-teal">Aegis automates the analytical step</strong> — cross-document reasoning that identifies
+            every gap in seconds, with every AI call inspected by a security firewall and logged for regulators.
+            EU DORA (2025) and the EU AI Act require exactly this level of oversight for AI in banking.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ExportButton({ gaps, decisionTrail }: { gaps: Gap[]; decisionTrail: string[] }) {
   function download() {
     const blob = new Blob(
@@ -347,9 +386,18 @@ function AuditEntryRow({ e, expanded, onToggle }: {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
+const LOADING_STEPS = [
+  'Inspecting outbound prompt via Lobster Trap…',
+  'Sending policy requirements + RCSA controls to AI…',
+  'Reasoning across documents — identifying gaps…',
+  'Inspecting model response via Lobster Trap…',
+  'Validating JSON output schema…',
+];
+
 export default function Home() {
-  const [tab, setTab] = useState<'analyze' | 'redteam'>('analyze');
+  const [tab, setTab] = useState<'analyze' | 'redteam' | 'memo'>('analyze');
   const [running, setRunning] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [gaps, setGaps] = useState<Gap[]>([]);
   const [coverage, setCoverage] = useState<number | null>(null);
   const [decisionTrail, setDecisionTrail] = useState<string[]>([]);
@@ -360,6 +408,14 @@ export default function Home() {
   const [expandedAudit, setExpandedAudit] = useState<number | null>(null);
   const [redTeam, setRedTeam] = useState<RedTeamResult[]>([]);
   const [hasRun, setHasRun] = useState(false);
+  const [memo, setMemo] = useState('');
+  const [memoFallback, setMemoFallback] = useState(false);
+  const [memoTrail, setMemoTrail] = useState<string[]>([]);
+  
+  // Memo drafter state
+  const [memo, setMemo] = useState<string>('');
+  const [drafting, setDrafting] = useState(false);
+  const [memoDecisionTrail, setMemoDecisionTrail] = useState<string[]>([]);
 
   const refreshAudit = useCallback(async () => {
     try {
@@ -374,6 +430,12 @@ export default function Home() {
     return () => clearInterval(t);
   }, [refreshAudit]);
 
+  useEffect(() => {
+    if (!running) { setLoadingStep(0); return; }
+    const t = setInterval(() => setLoadingStep(s => (s + 1) % LOADING_STEPS.length), 2200);
+    return () => clearInterval(t);
+  }, [running]);
+
   async function runAnalyze() {
     setRunning(true);
     setGaps([]);
@@ -381,6 +443,8 @@ export default function Home() {
     setDecisionTrail([]);
     setFallback(false);
     setHasRun(false);
+    setMemo('');
+    setMemoDecisionTrail([]);
     try {
       const r = await fetch('/api/analyze', { method: 'POST' }).then(x => x.json());
       setGaps(r.gaps ?? []);
@@ -390,6 +454,41 @@ export default function Home() {
       setFallbackReason(r.fallbackReason ?? '');
       setUsedDemoData(!!r.usedDemoData);
       setHasRun(true);
+    } finally {
+      setRunning(false);
+      refreshAudit();
+    }
+  }
+
+  async function runDraftMemo() {
+    if (gaps.length === 0) return;
+    setDrafting(true);
+    setMemo('');
+    setMemoDecisionTrail([]);
+    try {
+      const r = await fetch('/api/draft-memo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gaps })
+      }).then(x => x.json());
+      setMemo(r.memo ?? '');
+      setMemoDecisionTrail(r.decisionTrail ?? []);
+    } finally {
+      setDrafting(false);
+      refreshAudit();
+    }
+  }
+
+  async function runDraftMemo() {
+    setRunning(true);
+    setMemo('');
+    setMemoTrail([]);
+    try {
+      const body = gaps.length > 0 ? { gaps } : {};
+      const r = await fetch('/api/draft-memo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(x => x.json());
+      setMemo(r.memo ?? '');
+      setMemoFallback(!!r.fallback);
+      setMemoTrail(r.decisionTrail ?? []);
     } finally {
       setRunning(false);
       refreshAudit();
@@ -431,6 +530,9 @@ export default function Home() {
         <div className="flex gap-2 shrink-0">
           <button onClick={() => setTab('analyze')} className={tab === 'analyze' ? 'btn' : 'btn-ghost'}>
             Gap Analysis
+          </button>
+          <button onClick={() => setTab('memo')} className={tab === 'memo' ? 'btn' : 'btn-ghost'}>
+            Draft Memo
           </button>
           <button onClick={() => setTab('redteam')} className={tab === 'redteam' ? 'btn' : 'btn-ghost'}>
             Red Team
@@ -478,17 +580,27 @@ export default function Home() {
                   </div>
                 )}
 
+                {running && (
+                  <div className="mt-4 rounded bg-aegis-teal/5 border border-aegis-teal/20 p-3 text-sm text-aegis-teal/80 flex items-center gap-3">
+                    <Spinner />
+                    <span className="transition-all">{LOADING_STEPS[loadingStep]}</span>
+                  </div>
+                )}
+
                 {!hasRun && !running && (
                   <div className="mt-4 rounded bg-aegis-midnight/40 border border-aegis-navy/60 p-4 text-sm text-aegis-sand/50">
                     Click <strong className="text-aegis-sand/70">Run Analysis</strong> to detect control gaps.
-                    Gemini 2.5 Pro will reason across 5 policy requirements and 4 RCSA controls.
-                    If no API key is set, pre-computed fallback gaps are shown instantly.
+                    The AI reasons across 5 policy requirements and 4 RCSA controls.
+                    If no API key is set, pre-computed fallback gaps are shown instantly — the demo never breaks.
                   </div>
                 )}
 
                 {coverage !== null && <CoverageBar value={coverage} />}
                 {gaps.length > 0 && <SeveritySummary gaps={gaps} />}
               </div>
+
+              {/* About 2LoD — for non-finance judges */}
+              <AboutPanel />
 
               {/* Expand to preview input data */}
               <DataPreviewPanel />
@@ -503,6 +615,47 @@ export default function Home() {
                     <ExportButton gaps={gaps} decisionTrail={decisionTrail} />
                   </div>
                   {gaps.map(g => <GapCard key={g.gapId} gap={g} />)}
+                </div>
+              )}
+
+              {/* Draft Memo Section */}
+              {gaps.length > 0 && (
+                <div className="card">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-aegis-sand/70">2LoD Remediation Memo</h3>
+                      <p className="text-xs text-aegis-sand/60 mt-0.5">
+                        Draft a formal memo based on the detected gaps.
+                      </p>
+                    </div>
+                    <button className="btn shrink-0" onClick={runDraftMemo} disabled={drafting}>
+                      {drafting ? <span className="flex items-center gap-2"><Spinner />Drafting…</span> : 'Draft Memo'}
+                    </button>
+                  </div>
+                  
+                  {memo && (
+                    <div className="mt-4 rounded border border-aegis-navy/60 bg-aegis-midnight p-4">
+                      <pre className="whitespace-pre-wrap font-sans text-sm text-aegis-sand/80">
+                        {memo}
+                      </pre>
+                    </div>
+                  )}
+
+                  {memoDecisionTrail.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-aegis-navy/60">
+                      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-aegis-sand/60">
+                        Memo Drafter Decision Trail
+                      </h4>
+                      <ol className="space-y-1 text-xs font-mono">
+                        {memoDecisionTrail.map((d, i) => (
+                          <li key={i} className="text-aegis-sand/70 flex gap-2">
+                            <span className="text-aegis-sand/30 shrink-0">{i + 1}.</span>
+                            <span>{d}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -523,6 +676,64 @@ export default function Home() {
                 </div>
               )}
             </>
+          )}
+
+          {tab === 'memo' && (
+            <div className="space-y-4">
+              <div className="card">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">Remediation Memo Drafter</h2>
+                    <p className="text-sm text-aegis-sand/60 mt-0.5">
+                      AI drafts a formal 2LoD memo from detected gaps · every call inspected by Lobster Trap
+                    </p>
+                  </div>
+                  <button className="btn shrink-0" onClick={runDraftMemo} disabled={running}>
+                    {running
+                      ? <span className="flex items-center gap-2"><Spinner />Drafting…</span>
+                      : gaps.length > 0 ? `Draft Memo (${gaps.length} gaps)` : 'Draft Demo Memo'}
+                  </button>
+                </div>
+                {gaps.length === 0 && !memo && (
+                  <div className="mt-3 rounded bg-aegis-midnight/40 border border-aegis-navy/60 p-3 text-xs text-aegis-sand/50">
+                    Run Gap Analysis first to draft a memo from live results, or click above to use the pre-computed demo gaps.
+                  </div>
+                )}
+                {memoFallback && (
+                  <div className="mt-3 rounded border border-aegis-warn/40 bg-aegis-warn/10 p-3 text-sm">
+                    ⚠ Offline fallback — showing pre-computed demo memo.
+                  </div>
+                )}
+              </div>
+
+              {memo && (
+                <div className="card">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-aegis-sand/60">Generated Memo</h3>
+                    <button
+                      className="btn-ghost text-xs px-3 py-1.5"
+                      onClick={() => {
+                        const blob = new Blob([memo], { type: 'text/markdown' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a'); a.href = url; a.download = `aegis-memo-${Date.now()}.md`; a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >↓ Download .md</button>
+                  </div>
+                  <pre className="whitespace-pre-wrap text-xs font-mono text-aegis-sand/80 leading-relaxed max-h-[60vh] overflow-y-auto bg-aegis-midnight/60 rounded p-4 border border-aegis-navy">
+                    {memo}
+                  </pre>
+                  {memoTrail.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-aegis-navy/60">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-aegis-sand/50 mb-2">Decision Trail</div>
+                      <ol className="space-y-1 text-xs font-mono text-aegis-sand/60">
+                        {memoTrail.map((d, i) => <li key={i}>{i+1}. {d}</li>)}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {tab === 'redteam' && (

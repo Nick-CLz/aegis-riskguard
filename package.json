@@ -12,6 +12,7 @@
     "redteam": "node scripts/redteam.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@google/generative-ai": "^0.21.0",
     "js-yaml": "^4.1.0",
     "next": "14.2.5",

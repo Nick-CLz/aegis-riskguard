@@ -2,7 +2,13 @@
 
 > **The trust layer for autonomous risk operations in regulated finance.**
 >
-> An AI agent that compares policy documents against RCSA registers and identifies control gaps in seconds — with **every Gemini call inspected by a deep-prompt-inspection firewall** and **every decision auditable by a regulator**.
+> An AI agent that compares policy documents against RCSA registers and identifies control gaps in seconds — with **every AI call inspected by a deep-prompt-inspection firewall** and **every decision auditable by a regulator**.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-20+-teal.svg)](package.json)
+[![Next.js](https://img.shields.io/badge/Next.js-14-teal.svg)](next.config.js)
+[![Provider](https://img.shields.io/badge/AI-Gemini%20%7C%20Claude%20Opus%204.7-teal.svg)](#tech-stack)
+[![Tracks](https://img.shields.io/badge/Hackathon-Milan%20AI%20Week%202026-orange.svg)](https://lablab.ai)
 
 **Submission:** Milan AI Week 2026 · AI Agent Olympics Hackathon
 **Tracks:** Enterprise Utility · Intelligent Reasoning · Gemini · Vultr
@@ -48,7 +54,7 @@ This is a hackathon-scope build. We chose ONE agent — the Gap Detector — and
 
 | Component | Status |
 |---|---|
-| Gap Detector agent (Gemini 2.5 Pro) | ✅ Working |
+| Gap Detector agent (Gemini 2.5 Flash / Claude Opus 4.7) | ✅ Working |
 | Lobster Trap inline TypeScript engine | ✅ Working |
 | Custom 2LoD-Financial policy YAML | ✅ Working (DORA + EU AI Act + DFSA aligned) |
 | Live audit log (HMAC-signed) | ✅ Working |
@@ -56,7 +62,8 @@ This is a hackathon-scope build. We chose ONE agent — the Gap Detector — and
 | Web UI on Next.js | ✅ Working |
 | Deploy on Vultr VM | ✅ One-shot bootstrap script |
 | Multimodal ingestion (PDF/XLSX/images) | 🔲 Roadmap |
-| Memo Drafter + Compliance Checker agents | 🔲 Roadmap |
+| Memo Drafter agent (AI-generated remediation memos) | ✅ Working |
+| Compliance Checker agent | 🔲 Roadmap |
 | Multi-tenant / RBAC | 🔲 Roadmap |
 | GRC platform integrations (ServiceNow, MetricStream) | 🔲 Roadmap |
 
@@ -150,10 +157,11 @@ Each test is reproducible. Every result is logged in the audit panel with an HMA
 
 | Layer | Technology |
 |---|---|
-| Reasoning | **Google Gemini 2.5 Pro** (Flash kept warm for future agents) |
+| Reasoning (default) | **Google Gemini 2.5 Flash** (free-tier; set `GEMINI_MODEL_REASONING=gemini-2.5-pro` with billing) |
+| Reasoning (premium) | **Claude Opus 4.7** — set `AEGIS_PROVIDER=claude` + `ANTHROPIC_API_KEY` |
 | Trust layer | Inline **Lobster Trap** engine in TypeScript · YAML policy compatible with upstream Go binary |
 | Web | **Next.js 14** (App Router) · Tailwind · React 18 |
-| Deploy | **Vultr** Cloud Compute VM · Docker Compose |
+| Deploy | **Vultr** Cloud Compute VM · Docker Compose · **Vercel** (one-click) |
 | Validation | Zod · `js-yaml` |
 
 ---

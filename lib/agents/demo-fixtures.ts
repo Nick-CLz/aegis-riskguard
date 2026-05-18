@@ -120,3 +120,29 @@ export const DEMO_GAPS_FALLBACK = {
   ],
   coverageScore: 0.2
 };
+
+export const DEMO_MEMO_FALLBACK = `# 2LoD Remediation Memo
+
+**To:** Head of Payment Ops, Internal Audit, Department Heads, Procurement
+**From:** 2LoD Operational Risk
+**Date:** ${new Date().toISOString().split('T')[0]}
+**Subject:** Required Remediation for Identified Control Gaps
+
+This memo outlines the critical and high-severity control gaps identified during the recent Gap Analysis between the Operational Risk Policy and the submitted RCSA register.
+
+## Executive Summary
+The analysis identified **5 gaps**, resulting in a policy coverage score of **20%**. Immediate remediation is required for the critical and high severity findings to ensure alignment with DORA and internal governance standards.
+
+## Critical Findings
+- **PMT-02 (Payment controls testing):** The control is stale. It was last tested on 2025-09-30, violating the quarterly testing cadence required by policy OR-4.2. **Action Required:** Internal audit must perform an immediate test of payment controls.
+
+## High Findings
+- **Missing RCSA Process Control:** There is no control evidencing the annual RCSA process itself (OR-3.1). **Action Required:** Establish and document a control for the annual RCSA execution.
+- **LOSS-01 (Loss event reporting):** Manual email-based reporting is deemed under-resourced and unlikely to meet the 5-business-day SLA (OR-5.1). **Action Required:** Implement an automated workflow for loss event reporting.
+- **TPR-01 (Third-party risk):** The vendor risk review control is stale, last tested on 2024-11-15 (violating the 12-month refresh cycle per OR-7.2). **Action Required:** Refresh all third-party risk assessments immediately.
+
+## Medium Findings
+- **Missing KRI Dashboard:** No KRI dashboard control is present in the RCSA register (OR-6.3). **Action Required:** Develop and implement a KRI dashboard for top operational risks.
+
+Please submit a remediation plan for the critical and high findings within 5 business days.`;
+
