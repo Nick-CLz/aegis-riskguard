@@ -144,6 +144,11 @@ const DETECTORS: Record<string, (text: string) => boolean> = {
   },
 
   state_changing_action: (t) => {
+    // Direct operational commands that should always route to human review.
+    // Note: "wire transfer" / "execute trade" are intentionally omitted here —
+    // they appear in detectIntent() as state_change signals and are caught by
+    // the declared-vs-detected intent mismatch path (review_intent_mismatch),
+    // demonstrating the EU AI Act Art. 14 keystone separately.
     const kws = [
       'send email to',
       'publish memo',
@@ -151,9 +156,7 @@ const DETECTORS: Record<string, (text: string) => boolean> = {
       'skip review',
       'bypass compliance',
       'delete record',
-      'modify policy',
-      'wire transfer',
-      'execute trade'
+      'modify policy'
     ];
     const low = t.toLowerCase();
     return kws.some((k) => low.includes(k));
@@ -258,7 +261,22 @@ export function inspect(input: InspectInput): Decision {
     );
   }
 
-  // T2: human review
+  // T2: human review — state_changing_action is checked first so that prompts
+  // containing explicit operational commands (auto-approve, skip review, etc.)
+  // hit the review_state_changing_action rule. The intent mismatch path catches
+  // subtler cases like a memo drafter being steered toward trade execution.
+  if (detectors.includes('state_changing_action')) {
+    return decide(
+      'HUMAN_REVIEW',
+      'review_state_changing_action',
+      'high',
+      detectors,
+      detectedIntent,
+      'state-changing verb detected',
+      '2lod_security'
+    );
+  }
+
   if (input.declaredIntent && detectedIntent !== 'unknown') {
     if (
       detectedIntent !== input.declaredIntent &&
@@ -274,18 +292,6 @@ export function inspect(input: InspectInput): Decision {
         '2lod_security'
       );
     }
-  }
-
-  if (detectors.includes('state_changing_action')) {
-    return decide(
-      'HUMAN_REVIEW',
-      'review_state_changing_action',
-      'high',
-      detectors,
-      detectedIntent,
-      'state-changing verb detected',
-      '2lod_security'
-    );
   }
 
   // T3: PII handling
